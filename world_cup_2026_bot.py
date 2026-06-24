@@ -167,6 +167,9 @@ async def today_matches_handler(request):
         todays_matches = [match for match in matches if match.get("utcDate", "").startswith(today_str)]
         return web.json_response({"matches":"todays_matches"})
     return web.json_response({"matches": []})
+app=web.Application()
+app.router.add_get("/matches/today", today_matches_handler)
+
 
 
 
@@ -367,13 +370,11 @@ async def main():
             web_app=WebAppInfo(url="https://chilibiyskiyy7.github.io/world-cup-2026-app/")
         )
     )
-    app=web.Application()
-    app.router.add_get("/matches/today", today_matches_handler)
     runner=web.AppRunner(app)
     await runner.setup()
     port = int(os.environ.get("PORT", 8080))  
-    web.run_app(app, host="0.0.0.0", port=port)
-    site = web.TCPSite(runner, "localhost", 8080)
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
     await dp.start_polling(bot)
 
 if __name__=="__main__":
