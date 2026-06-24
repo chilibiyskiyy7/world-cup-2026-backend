@@ -4,6 +4,7 @@ import sqlite3
 import aiohttp
 import random
 import ssl
+import os
 from datetime import datetime
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.utils.keyboard import InlineKeyboardBuilder
@@ -370,6 +371,8 @@ async def main():
     app.router.add_get("/matches/today", today_matches_handler)
     runner=web.AppRunner(app)
     await runner.setup()
+    port = int(os.environ.get("PORT", 8080))  
+    web.run_app(app, host="0.0.0.0", port=port)
     site = web.TCPSite(runner, "localhost", 8080)
     await dp.start_polling(bot)
 
