@@ -232,11 +232,12 @@ async def latest_matches_handler(request):
                     result=[]
                     for match in latest_matches:
                         result.append({
-                            "utcDate":match.get("utcDate"),
-                            "home_team":match["homeTeam"].get("name") or "TBD",
-                            "away_team":match["awayTeam"].get("name") or "TBD",
-                            "home_score":match.get("score", {}).get("fullTime", {}).get("home", "?"),
-                            "away_score":match.get("score", {}).get("fullTime", {}).get("away", "?")})
+                            "utcDate": match.get("utcDate"),
+                            "home_team": match.get("homeTeam", {}).get("name") or "TBD",
+                            "away_team": match.get("awayTeam", {}).get("name") or "TBD",
+                            "home_score": match.get("score", {}).get("fullTime", {}).get("home", "?"),
+                            "away_score": match.get("score", {}).get("fullTime", {}).get("away", "?")
+                        })
                     return web.json_response({"matches":result}, headers=headers)
     return web.json_response({"matches": []}, headers=headers)
          
