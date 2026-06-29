@@ -165,11 +165,15 @@ async def today_matches_handler(request):
         matches=data["matches"]
         now=datetime.now()
         today_str = now.strftime("%Y-%m-%d")
-        todays_matches = [match for match in matches if match.get("utcDate", "").startswith(today_str)]
+        todays_matches = []
+        for match in matches: 
+            if match.get("utcDate", "").startswith(today_str):
+                todays_matches.append({"utcDate":match.get("utcDate"), "home": match.get("homeTeam", {}).get("name") or "TBD",
+                    "away": match.get("awayTeam", {}).get("name") or "TBD"})
         return web.json_response({"matches":todays_matches}, headers=headers)
     return web.json_response({"matches": []}, headers=headers)
-app=web.Application()
-app.router.add_get("/api/matches/today", today_matches_handler)
+
+
 
 
 
@@ -211,6 +215,33 @@ async def handle_latest_matches(message:Message):
     except Exception as e:
         logging.error(f"Error in latest matches: {e}", exc_info=True)
         await message.answer("Sorry, an error occurred. Try again later.")
+
+async def latest_matches_handler(request):
+    match_params = {"status": "FINISHED", "limit": 5}
+    data = await fetch_football_data(params=match_params)
+    headers = {"Access-Control-Allow-Origin": "*"}
+    if data and "matches" in data:
+        matches=data["matches"]
+        if matches:
+                played_matches = [
+                    m for m in matches 
+                    if m.get("status") == "FINISHED" or m.get("score", {}).get("fullTime", {}).get("home") is not None
+                ]
+                if played_matches:
+                    latest_matches=played_matches[-5:][::-1]
+                    result=[]
+                    for match in latest_matches:
+                        result.append({
+                            "utcDate":match.get("utcDate"),
+                            "home_team":match["homeTeam"].get("name") or "TBD",
+                            "away_team":match["awayTeam"].get("name") or "TBD",
+                            "home_score":match.get("score", {}).get("fullTime", {}).get("home", "?"),
+                            "away_score":match.get("score", {}).get("fullTime", {}).get("away", "?")})
+                    return web.json_response({"matches":result}, headers=headers)
+    return web.json_response({"matches": []}, headers=headers)
+         
+                        
+
 
 
 @dp.message(F.text=="Top Scorers")
@@ -372,6 +403,9 @@ async def main():
             web_app=WebAppInfo(url="https://chilibiyskiyy7.github.io/world-cup-2026-app/")
         )
     )
+    app=web.Application()
+    app.router.add_get("/api/matches/today", today_matches_handler)
+    app.router.add_get("/api/latest/matches", latest_matches_handler)
     runner=web.AppRunner(app)
     await runner.setup()
     port = int(os.environ.get("PORT", 8080))  
