@@ -86,6 +86,18 @@ def get_optional_keyboard(menu_type="matches"):
             builder.add(InlineKeyboardButton(text=f"Group {letter}", callback_data=f"view_group:{letter}"))
         builder.adjust(3)
         builder.row(InlineKeyboardButton(text="⬅️ Back to Menu", callback_data="back:standings"))
+    elif menu_type == "show_playoffs":
+        stage=[
+            ("Round of 32", "R32"), 
+            ("Round of 16", "R16"),
+            ("Quarter-finals", "QF"),
+            ("Semi-finals", "SF"),
+            ("Final", "FI")
+            ]
+        for text, code in stage:
+            builder.add(InlineKeyboardButton(text=text, callback_data=f"view_playoffs:{code}"))
+        builder.adjust(3)    
+        builder.row(InlineKeyboardButton(text="⬅️ Back to Menu", callback_data="back:standings"))   
     return builder.as_markup()
 
 @dp.message(Command("start"))
@@ -267,7 +279,28 @@ async def handle_top_scorers(message:Message):
     except Exception as e:
         logging.error(f"Error in 'Top Scorers': {e}", exc_info=True)
         await message.answer("Sorry, an error occurred. Try again later.")
-    
+
+async def top_scorers_handler(request):
+    data=await fetch_football_data(endpoint="scorers")
+    headers = {"Access-Control-Allow-Origin": "*"}
+    if data and "scorers" in data:
+        scorers=data["scorers"][:10]   
+        result=[]
+        for scorer in scorers:
+            player = scorer.get("player", {})
+            team = scorer.get("team", {})
+            result.append({
+                    "player_id":player.get("id"),
+                    "player_name": player.get("name") or "Unknown Player",
+                    "team_name": team.get("name") or "Unknown Team",
+                    "goals": scorer.get("goals", 0),
+                    "assists": scorer.get("assists", 0),
+                    "played_matches": scorer.get("playedMatches", 0),
+                    "penalties": scorer.get("penalties", 0)
+
+            })    
+        return web.json_response({"scorers":result}, headers=headers)
+    return web.json_response({"scorers": []}, headers=headers)
 
 
 @dp.message(F.text=="Standings")
@@ -335,8 +368,61 @@ async def view_universal_group(callback_query: CallbackQuery):
 async def show_playoffs(callback_query=CallbackQuery):
     try:
         await callback_query.answer()
-        response_text="Noy available yet. Come back on 8th July of 2026!"
-        await callback_query.message.edit_text(text=response_text, reply_markup=get_optional_keyboard("standings"))
+        response_text="Choose a stage below."
+        await callback_query.message.edit_text(text=response_text, reply_markup=get_optional_keyboard("show_playoffs"))
+    except Exception as e:
+        logging.error(f"Error processing football data: {e}", exc_info=True)
+        try:
+            await callback_query.message.edit_text("Sorry, an error occured. Try again later.")
+        except Exception:
+            await callback_query.message.answer("Error. Try again later.")
+
+@dp.callback_query(F.data.startswith("view_playoffs:"))
+async def view_universal_playoffs(callback_query: CallbackQuery):
+    try:
+        await callback_query.answer()
+        stage_code = callback_query.data.split(":")[1]
+        data = await fetch_football_data(endpoint="matches")
+        
+        playoff_matches = []
+        if data and "matches" in data:
+            # ЦИКЛ №1: ТОЛЬКО собираем матчи нужной стадии, ничего больше!
+            for match in data["matches"]:
+                if match.get("stage") == stage_code:
+                    playoff_matches.append(match)
+        
+        # ОТСТУП УМЕНЬШИЛСЯ: Мы вышли из цикла! 
+        # Теперь один раз обрабатываем собранный список:
+        if playoff_matches:
+            stage_title = stage_code.replace("_", " ").title()
+            response_text = f"🏆 *World Cup 2026 — {stage_title}*\n\n"
+            
+            # ЦИКЛ №2: Красиво оформляем собранные матчи в текст
+            for match in playoff_matches:
+                home_team = match.get("homeTeam", {}).get("name") or "TBD"
+                away_team = match.get("awayTeam", {}).get("name") or "TBD"
+                home_score = match.get("score", {}).get("fullTime", {}).get("home")
+                away_score = match.get("score", {}).get("fullTime", {}).get("away")
+                
+                if home_score is not None and away_score is not None:
+                    score_str = f"*{home_score} : {away_score}*"
+                else:
+                    score_str = "vs"
+                response_text += f"⚽ {home_team} {score_str} {away_team}\n"
+            
+            # Один-единственный раз редактируем сообщение
+            await callback_query.message.edit_text(
+                text=response_text, 
+                reply_markup=get_optional_keyboard("show_playoffs"), 
+                parse_mode="Markdown"
+            )
+        else:
+            # Если после окончания цикла список остался пустым
+            await callback_query.message.edit_text(
+                text=f"Matches for stage {stage_code} not found or not scheduled yet.",
+                reply_markup=get_optional_keyboard("show_playoffs")
+            )
+            
     except Exception as e:
         logging.error(f"Error processing football data: {e}", exc_info=True)
         try:
@@ -407,6 +493,7 @@ async def main():
     app=web.Application()
     app.router.add_get("/api/matches/today", today_matches_handler)
     app.router.add_get("/api/latest/matches", latest_matches_handler)
+    app.router.add_get("/api/top/scorers", top_scorers_handler)
     runner=web.AppRunner(app)
     await runner.setup()
     port = int(os.environ.get("PORT", 8080))  
