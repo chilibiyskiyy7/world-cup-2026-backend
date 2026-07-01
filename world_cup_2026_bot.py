@@ -88,11 +88,11 @@ def get_optional_keyboard(menu_type="matches"):
         builder.row(InlineKeyboardButton(text="⬅️ Back to Menu", callback_data="back:standings"))
     elif menu_type == "show_playoffs":
         stage=[
-            ("Round of 32", "R32"), 
-            ("Round of 16", "R16"),
-            ("Quarter-finals", "QF"),
-            ("Semi-finals", "SF"),
-            ("Final", "FI")
+            ("Round of 32", "ROUND_OF_32"), 
+            ("Round of 16", "ROUND_OF_16"),
+            ("Quarter-finals", "QUARTER_FINALS"),
+            ("Semi-finals", "SEMI_FINALS"),
+            ("Final", "FINAL")
             ]
         for text, code in stage:
             builder.add(InlineKeyboardButton(text=text, callback_data=f"view_playoffs:{code}"))
