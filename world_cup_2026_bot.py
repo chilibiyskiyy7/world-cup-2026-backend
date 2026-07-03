@@ -13,7 +13,7 @@ from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, InlineKe
 from aiogram import Bot 
 from aiohttp import web
 
-BOT_TOKEN = os.getenv("BOT_TOKEN")
+BOT_TOKEN = os.getenv("BOT_TOKEN", "8665805981:AAHd8Tm2PuMueSlFswAiRseOBDFcoBTIaWQ")
 FOOTBALL_API_URL="https://api.football-data.org/v4/competitions/WC/matches"
 API_KEY="95acad5a10ca4075b9603bc0cba4c989"
 
