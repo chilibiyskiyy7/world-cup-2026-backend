@@ -365,7 +365,7 @@ async def view_universal_group(callback_query: CallbackQuery):
 
                 
 @dp.callback_query(F.data.startswith("show_playoffs"))
-async def show_playoffs(callback_query=CallbackQuery):
+async def show_playoffs(callback_query:CallbackQuery):
     try:
         await callback_query.answer()
         response_text="Choose a stage below."
@@ -382,7 +382,7 @@ async def view_universal_playoffs(callback_query: CallbackQuery):
     try:
         await callback_query.answer()
         stage_code = callback_query.data.split(":")[1]
-        data = await fetch_football_data(endpoint="matches")
+        data = await fetch_football_data(endpoint="")
         
         playoff_matches = []
         if data and "matches" in data:
