@@ -9,7 +9,7 @@ from datetime import datetime
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.filters import Command
-from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, message, WebAppInfo, MenuButtonWebApp
+from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, message, WebAppInfo, MenuButtonWebApp, FSInputFile
 from aiogram import Bot 
 from aiohttp import web
 
@@ -20,6 +20,7 @@ API_KEY="95acad5a10ca4075b9603bc0cba4c989"
 bot=Bot(token=BOT_TOKEN)
 dp=Dispatcher()
 logging.basicConfig(level=logging.INFO)
+BANNED_USERS=set()
 
 def init_db():
     conn=sqlite3.connect("world_cup_2026.db")
@@ -54,12 +55,37 @@ async def fetch_football_data(endpoint="matches", params=None):
         except Exception as e:
             logging.error(f"API Error: {e}")
             return None
+        
+DEFAULT_LOCAL_PHOTO = "images/default.jpg"
+async def safe_send_local_photo(chat_id, photo_path, caption, reply_markup=None, parse_mode="HTML"):
+    if os.path.exists(photo_path):
+        photo_file = FSInputFile(photo_path)
+    else:
+        logging.warning(f"File {photo_path} not found! Sending default.")
+        photo_file = FSInputFile("images/default.jpg") 
+    try:
+        await bot.send_photo(
+            chat_id=chat_id,
+            photo=photo_file,
+            caption=caption,
+            reply_markup=reply_markup,  
+            parse_mode=parse_mode
+        )
+    except Exception as e:
+        logging.error(f"Critical error sending photo: {e}")
+        await bot.send_message(
+            chat_id=chat_id, 
+            text=caption, 
+            reply_markup=reply_markup, 
+            parse_mode=parse_mode
+        )
+
 
 def get_main_keyboard():
     buttons=[
         [KeyboardButton(text="Latest Matches"), KeyboardButton(text="Today's Matches"), KeyboardButton(text="Random Match")],
-        [KeyboardButton(text="Standings"), KeyboardButton(text="Top Scorers"), KeyboardButton(text="My Predictions")],
-        [KeyboardButton(text="Bot's Predictions"), KeyboardButton(text="My Points")]
+        [KeyboardButton(text="Standings"), KeyboardButton(text="Top Scorers")],
+        [KeyboardButton(text="Other...")]
     ]     
     return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True)
 def get_optional_keyboard(menu_type="matches"):
@@ -97,8 +123,62 @@ def get_optional_keyboard(menu_type="matches"):
         for text, code in stage:
             builder.add(InlineKeyboardButton(text=text, callback_data=f"view_playoffs:{code}"))
         builder.adjust(3)    
-        builder.row(InlineKeyboardButton(text="⬅️ Back to Menu", callback_data="back:standings"))   
+        builder.row(InlineKeyboardButton(text="⬅️ Back to Menu", callback_data="back:standings"))
+    elif menu_type == "other":
+        builder.row(InlineKeyboardButton(text="Kylian Mbappe", callback_data="mbappe"))
+    elif menu_type == "mbappe":
+        builder.row(InlineKeyboardButton(text="Yeah", callback_data="mbappe_yes"), InlineKeyboardButton(text="Nope", callback_data="mbappe_no"))
+    elif menu_type=="mbappe_no":
+        builder.row(InlineKeyboardButton(text="Back to Menu", callback_data="back:other"))             
     return builder.as_markup()
+
+@dp.message()
+async def check_ban_status(message: Message):
+    if message.from_user.id in BANNED_USERS:
+        if message.text and message.text.strip().lower() == "kylian mbappe is not dictator 67":
+            BANNED_USERS.remove(message.from_user.id)
+            await message.answer("Mbappe forgave you. You are unbanned now.", reply_markup=get_main_keyboard())
+            return
+        await message.answer("I banned you. If you want to be unbanned, send the correct password, asshole.\n\nMbappe")
+        return
+        
+    if message.text == "Latest Matches":
+        await handle_latest_matches(message)
+    elif message.text == "Today's Matches":
+        await handle_todays_matches(message)
+    elif message.text == "Random Match":
+        await handle_random_match(message)
+    elif message.text == "Standings":
+        await handle_standings(message)
+    elif message.text == "Top Scorers":
+        await handle_top_scorers(message)
+    elif message.text == "Other...":
+        await handle_other(message)
+
+@dp.callback_query()
+async def check_callback_ban(callback_query: CallbackQuery):
+    if callback_query.from_user.id in BANNED_USERS:
+        await callback_query.answer("You are BANNED! Type password in chat.", show_alert=True)
+        return
+    data = callback_query.data
+    if data == "mbappe":
+        await handle_mbappe(callback_query)
+    elif data == "mbappe_yes":
+        await handle_mbappe_yes(callback_query)
+    elif data == "mbappe_no":
+        await handle_mbappe_no(callback_query)
+    elif data.startswith("show_groupstage"):
+        await show_groupstage(callback_query)
+    elif data.startswith("view_group:"):
+        await view_universal_group(callback_query)
+    elif data.startswith("show_playoffs"):
+        await show_playoffs(callback_query)
+    elif data.startswith("view_playoffs:"):
+        await view_universal_playoffs(callback_query)
+    elif data.startswith("back:"):
+        await universal_back_handler(callback_query)
+    elif data.startswith("refresh:"):
+        await refresh_universal_refresh(callback_query)        
 
 @dp.message(Command("start"))
 async def cmd_start(message: Message):
@@ -110,6 +190,7 @@ async def cmd_start(message: Message):
     conn.commit()
     conn.close()
     await message.answer(f"Hello, {username}! Welcome to the World Cup 2026 Bot. \nChoose an option from the menu below:", reply_markup=get_main_keyboard())
+
 
 @dp.message(F.text =="Random Match")
 async def handle_random_match(message:Message):
@@ -134,6 +215,28 @@ async def handle_random_match(message:Message):
     except Exception as e:
         logging.error(f"Error processing football data: {e}")
         await message.answer("Sorry, an error occured. Try again later.")
+
+async def random_match_handler(request):
+    data=await fetch_football_data()
+    headers = {"Access-Control-Allow-Origin": "*"}
+    if data and "matches" in data and len(data["matches"])>0:
+        matches=data["matches"]
+        random_match=random.choice(matches)
+        formatted_match={
+                    "match_id": random_match.get("id"),
+                    "utcDate": random_match.get("utcDate"),
+                    "home_team": random_match.get("homeTeam", {}).get("name") or "TBD",
+                    "away_team": random_match.get("awayTeam", {}).get("name") or "TBD",
+                    "home_score": random_match.get("score", {}).get("fullTime", {}).get("home", "?"),
+                    "away_score": random_match.get("score", {}).get("fullTime", {}).get("away", "?")
+                }   
+        if formatted_match["home_score"] is None:
+            formatted_match["home_score"] = "?"
+        if formatted_match["away_score"] is None:
+            formatted_match["away_score"] = "?"
+        return web.json_response({"matches":[formatted_match]}, headers=headers)
+    return web.json_response({"matches": []}, headers=headers)
+            
 
 @dp.message(F.text =="Today's Matches")
 async def handle_todays_matches(message:Message):
@@ -312,8 +415,69 @@ async def handle_standings(message:Message):
         logging.error(f"Error in 'Standings': {e}", exc_info=True)
         await message.answer("Sorry, an error occurred. Try again later.")
 
+@dp.message(F.text=="Other...")
+async def handle_other(message: Message):
+    try:
+        response_text="Other options:"
+        await message.answer(response_text, reply_markup=get_optional_keyboard("other"), parse_mode="Markdown")
+    except Exception as e:
+        logging.error(f"Error in 'Other': {e}", exc_info=True)
+        await message.answer("Sorry, an error occurred. Try again later.")
 
-@dp.callback_query(F.data.startswith("show_groupstage"))
+
+async def handle_mbappe(callback_query: CallbackQuery):
+    try:
+        await callback_query.answer()
+        response_text="Hi. You might know me. I'n Vini JR, and I'm about to say something.There is a rumors that Kylian Mbappe could be a reason France might not win the World Cup 2026. Someone even call him 'dictator' by joke. People in Real Madrid FC, including me, is frustraited with his behavior. Remember that 'suddenly-went-to-Italy' accident? But I'm not gonna stop with hollow words only. I got the bunch of mediafiles that proofs evilness of this fuckin vicious turtle. Wanna see it?" 
+        photo_path="images/vini_crying.jpg"
+        await safe_send_local_photo(
+            chat_id=callback_query.message.chat.id,
+            photo_path=photo_path,
+            caption=response_text,
+            reply_markup=get_optional_keyboard("mbappe")
+        )
+    except Exception as e:
+        logging.error(f"Error in 'Other': {e}", exc_info=True)
+        await callback_query.message.answer("Sorry, an error occurred. Try again later.")
+
+
+async def handle_mbappe_yes(callback_query: CallbackQuery):
+    try:
+        await callback_query.answer()
+        user_id = callback_query.from_user.id
+        BANNED_USERS.add(user_id)
+        response_text="You're an asshole. Now GET OUT OF MY EYES YOU FUCKIN IDIOT!!!"
+        photo_path="images/dictator1.png"
+        await safe_send_local_photo(
+            chat_id=callback_query.message.chat.id,
+            photo_path=photo_path,
+            caption=response_text,
+            )
+    except Exception as e:
+        logging.error(f"Error in 'Other': {e}", exc_info=True)
+        await callback_query.message.answer("Sorry, an error occurred. Try again later.")
+
+
+async def handle_mbappe_no(callback_query: CallbackQuery):
+    try:
+        await callback_query.answer()
+        response_text="You're a good kid. You were right for not listening to this brasilian drama queen."
+        photo_path="images/dictator2_happy.png"
+        await safe_send_local_photo(
+            chat_id=callback_query.message.chat.id,
+            photo_path=photo_path,
+            caption=response_text,
+            reply_markup=get_optional_keyboard("mbappe_no")
+            )
+    except Exception as e:
+        logging.error(f"Error in 'Other': {e}", exc_info=True)
+        await callback_query.message.answer("Sorry, an error occurred. Try again later.")
+        
+
+    
+
+
+
 async def show_groupstage(callback_query: CallbackQuery):
     try:
         await callback_query.answer()
@@ -327,7 +491,7 @@ async def show_groupstage(callback_query: CallbackQuery):
             await callback_query.message.answer("Error. Try again later.")
 
                                  
-@dp.callback_query(F.data.startswith("view_group:"))
+
 async def view_universal_group(callback_query: CallbackQuery):
     try:
         await callback_query.answer()
@@ -364,7 +528,7 @@ async def view_universal_group(callback_query: CallbackQuery):
             await callback_query.message.answer("Error. Try again later.")
 
                 
-@dp.callback_query(F.data.startswith("show_playoffs"))
+
 async def show_playoffs(callback_query:CallbackQuery):
     try:
         await callback_query.answer()
@@ -377,7 +541,7 @@ async def show_playoffs(callback_query:CallbackQuery):
         except Exception:
             await callback_query.message.answer("Error. Try again later.")
 
-@dp.callback_query(F.data.startswith("view_playoffs:"))
+
 async def view_universal_playoffs(callback_query: CallbackQuery):
     try:
         await callback_query.answer()
@@ -430,7 +594,7 @@ async def view_universal_playoffs(callback_query: CallbackQuery):
         except Exception:
             await callback_query.message.answer("Error. Try again later.")
 
-@dp.callback_query(F.data.startswith("back:"))
+
 async def universal_back_handler(callback_query: CallbackQuery):
     try:
         back_target = callback_query.data.split(":")[1] 
@@ -440,6 +604,9 @@ async def universal_back_handler(callback_query: CallbackQuery):
         elif back_target == "standings":
             response_text = "Choose a stage below:"
             await callback_query.message.edit_text(text=response_text, reply_markup=get_optional_keyboard(menu_type="standings"),parse_mode="Markdown")
+        elif back_target == "other":
+            response_text = "Other options:"
+            await callback_query.message.edit_text(text=response_text, reply_markup=get_optional_keyboard(menu_type="other"),parse_mode="Markdown")
     except Exception as e:
         logging.error(f"Error in universal back handler: {e}", exc_info=True)
         await callback_query.message.answer("Error going back.")
@@ -447,7 +614,7 @@ async def universal_back_handler(callback_query: CallbackQuery):
 
     
 
-@dp.callback_query(F.data.startswith("refresh:"))
+
 async def refresh_universal_refresh(callback_query: CallbackQuery):
     try:
         await callback_query.answer()
@@ -494,6 +661,7 @@ async def main():
     app.router.add_get("/api/matches/today", today_matches_handler)
     app.router.add_get("/api/latest/matches", latest_matches_handler)
     app.router.add_get("/api/top/scorers", top_scorers_handler)
+    app.router.add_get("/api/random/match", random_match_handler)
     runner=web.AppRunner(app)
     await runner.setup()
     port = int(os.environ.get("PORT", 8080))  
