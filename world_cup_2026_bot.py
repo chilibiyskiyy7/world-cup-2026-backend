@@ -131,42 +131,7 @@ def get_optional_keyboard(menu_type="matches"):
     elif menu_type=="mbappe_no":
         builder.row(InlineKeyboardButton(text="Back to Menu", callback_data="back:other"))             
     return builder.as_markup()
-
-@dp.message(lambda msg: msg.from_user.id in BANNED_USERS)
-async def check_ban_status(message: Message):
-    if message.from_user.id in BANNED_USERS:
-        if message.text and message.text.strip().lower() == "kylian mbappe is not dictator 67":
-            BANNED_USERS.remove(message.from_user.id)
-            await message.answer("Mbappe forgave you. You are unbanned now.", reply_markup=get_main_keyboard())
-            return
-        await message.answer("I banned you. If you want to be unbanned, send the correct password, asshole.\n\nMbappe")
-        return
-
-@dp.callback_query()
-async def check_callback_ban(callback_query: CallbackQuery):
-    if callback_query.from_user.id in BANNED_USERS:
-        await callback_query.answer("You are BANNED! Type password in chat.", show_alert=True)
-        return
-        
-    data = callback_query.data
-    if data == "mbappe":
-        await handle_mbappe(callback_query)
-    elif data == "mbappe_yes":
-        await handle_mbappe_yes(callback_query)
-    elif data == "mbappe_no":
-        await handle_mbappe_no(callback_query)
-    elif data.startswith("show_groupstage"):
-        await show_groupstage(callback_query)
-    elif data.startswith("view_group:"):
-        await view_universal_group(callback_query)
-    elif data.startswith("show_playoffs"):
-        await show_playoffs(callback_query)
-    elif data.startswith("view_playoffs:"):
-        await view_universal_playoffs(callback_query)
-    elif data.startswith("back:"):
-        await universal_back_handler(callback_query)
-    elif data.startswith("refresh:"):
-        await refresh_universal_refresh(callback_query)        
+       
 
 @dp.message(Command("start"))
 async def cmd_start(message: Message):
@@ -433,7 +398,6 @@ async def handle_mbappe_yes(callback_query: CallbackQuery):
     try:
         await callback_query.answer()
         user_id = callback_query.from_user.id
-        BANNED_USERS.add(user_id)
         response_text="You're an asshole. Now GET OUT OF MY EYES YOU FUCKIN IDIOT!!!"
         photo_path="images/dictator1.png"
         await safe_send_local_photo(
