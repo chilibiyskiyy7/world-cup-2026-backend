@@ -141,25 +141,13 @@ async def check_ban_status(message: Message):
             return
         await message.answer("I banned you. If you want to be unbanned, send the correct password, asshole.\n\nMbappe")
         return
-        
-    if message.text == "Latest Matches":
-        await handle_latest_matches(message)
-    elif message.text == "Today's Matches":
-        await handle_todays_matches(message)
-    elif message.text == "Random Match":
-        await handle_random_match(message)
-    elif message.text == "Standings":
-        await handle_standings(message)
-    elif message.text == "Top Scorers":
-        await handle_top_scorers(message)
-    elif message.text == "Other...":
-        await handle_other(message)
 
 @dp.callback_query()
 async def check_callback_ban(callback_query: CallbackQuery):
     if callback_query.from_user.id in BANNED_USERS:
         await callback_query.answer("You are BANNED! Type password in chat.", show_alert=True)
         return
+        
     data = callback_query.data
     if data == "mbappe":
         await handle_mbappe(callback_query)
