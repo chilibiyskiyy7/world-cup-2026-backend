@@ -46,7 +46,7 @@ async def fetch_football_data(endpoint="matches", params=None):
     ssl_context.verify_mode = ssl.CERT_NONE 
     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=ssl_context)) as session:
         try:
-            async with session.get(url, headers=headers, timeout=10) as response:
+            async with session.get(url, headers=headers, params=params,timeout=10) as response:
                 if response.status == 200:
                     return await response.json()
                 else:
@@ -132,7 +132,7 @@ def get_optional_keyboard(menu_type="matches"):
         builder.row(InlineKeyboardButton(text="Back to Menu", callback_data="back:other"))             
     return builder.as_markup()
 
-@dp.message()
+@dp.message(lambda msg: msg.from_user.id in BANNED_USERS)
 async def check_ban_status(message: Message):
     if message.from_user.id in BANNED_USERS:
         if message.text and message.text.strip().lower() == "kylian mbappe is not dictator 67":
