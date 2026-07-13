@@ -10,10 +10,9 @@ from aiogram import Bot, Dispatcher, types, F
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.filters import Command
 from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, message, WebAppInfo, MenuButtonWebApp, FSInputFile
-from aiogram import Bot 
 from aiohttp import web
 
-BOT_TOKEN = os.getenv("BOT_TOKEN", "8665805981:AAHd8Tm2PuMueSlFswAiRseOBDFcoBTIaWQ")
+BOT_TOKEN = "8799505831:AAFl8g_PHUuDJEvnD2_Z0M5zMEMxZClRTLM"
 FOOTBALL_API_URL="https://api.football-data.org/v4/competitions/WC/matches"
 API_KEY="95acad5a10ca4075b9603bc0cba4c989"
 
@@ -377,6 +376,29 @@ async def handle_other(message: Message):
         logging.error(f"Error in 'Other': {e}", exc_info=True)
         await message.answer("Sorry, an error occurred. Try again later.")
 
+@dp.callback_query()
+async def handle_all_callbacks(callback_query: CallbackQuery):
+    await callback_query.answer()  # Сразу гасим часики на кнопке
+    data = callback_query.data
+    
+    if data == "mbappe":
+        await handle_mbappe(callback_query)
+    elif data == "mbappe_yes":
+        await handle_mbappe_yes(callback_query)
+    elif data == "mbappe_no":
+        await handle_mbappe_no(callback_query)
+    elif data.startswith("show_groupstage"):
+        await show_groupstage(callback_query)
+    elif data.startswith("view_group:"):
+        await view_universal_group(callback_query)
+    elif data.startswith("show_playoffs"):
+        await show_playoffs(callback_query)
+    elif data.startswith("view_playoffs:"):
+        await view_universal_playoffs(callback_query)
+    elif data.startswith("back:"):
+        await universal_back_handler(callback_query)
+    elif data.startswith("refresh:"):
+        await refresh_universal_refresh(callback_query)
 
 async def handle_mbappe(callback_query: CallbackQuery):
     try:
