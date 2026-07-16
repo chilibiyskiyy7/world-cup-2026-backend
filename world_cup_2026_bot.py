@@ -504,7 +504,7 @@ async def handle_mbappe_no(callback_query: CallbackQuery):
 async def process_infantino_inline(callback: CallbackQuery):
     await callback.answer()
     response_text="Hi! You're a lucky kid! Today, on 14th of July, you'll have an opportunity to ask me some questions. Go on!"
-    photo_path="infantino_default.png"
+    photo_path="images/infantino_default.png"
     await safe_send_local_photo(
             chat_id=callback.message.chat.id,
             photo_path=photo_path,
@@ -515,7 +515,7 @@ async def process_infantino_inline(callback: CallbackQuery):
 @dp.message(F.text=="Let's talk about Argentina. There's so much hustle about things that are going with Messi")
 async def infantino_argentina(message:Message):
     response_text="Oh... Argentina... My heart belongs to argentina. I almost became Christian Eriksen when my darling played against Cabo Verde. But I'm glad I call referee in time. I told 'em that Messi must win World Cup."
-    photo_path="infantino_argentina.png"        
+    photo_path="images/infantino_argentina.png"        
     await safe_send_local_photo(
             chat_id=message.chat.id,
             photo_path=photo_path,
@@ -526,7 +526,7 @@ async def infantino_argentina(message:Message):
 @dp.message(F.text=="What the fuck?")
 async def infantino_neutral(message:Message):
     response_text="Oh. Um... I mean.. I mean I'n neutral."
-    photo_path="infantino_scared.png"
+    photo_path="images/infantino_scared.png"
     await safe_send_local_photo(
             chat_id=message.chat.id,
             photo_path=photo_path,
@@ -537,7 +537,7 @@ async def infantino_neutral(message:Message):
 @dp.message(F.text=="Man, fuck you. So it's not Ronaldo's fans delusional. It is truth... wait a minute, what's on that picture behind you?")
 async def infantino_scared(message:Message):
     response_text="It's nothing. Nothing special, nothing interest. Just keep out of that thing. O-okay?"
-    photo_path="infantino_stress.png"
+    photo_path="images/infantino_stress.png"
     await safe_send_local_photo(
             chat_id=message.chat.id,
             photo_path=photo_path,
@@ -548,7 +548,7 @@ async def infantino_scared(message:Message):
 @dp.message(F.text=="Man fuck you. I got to look.")
 async def infantino_family(message:Message):
     response_text="..."
-    photo_path="infantino_family.jpg"
+    photo_path="images/infantino_family.jpg"
     await safe_send_local_photo(
             chat_id=message.chat.id,
             photo_path=photo_path,
@@ -559,7 +559,7 @@ async def infantino_family(message:Message):
 @dp.message(F.text=="What the fuck is this shit? man you're serious?")
 async def infantino_angry(message:Message):
     response_text="You know too much. Now I'll get the permission of killin' you. \n\n*Phone's ringing*"
-    photo_path="infantino_calling.jpg"
+    photo_path="images/infantino_calling.jpg"
     await safe_send_local_photo(
             chat_id=message.chat.id,
             photo_path=photo_path,
@@ -570,7 +570,7 @@ async def infantino_angry(message:Message):
 @dp.message(F.text=="Who are you calling? I'll be quiet just let me go.")
 async def infantino_call(message:Message):
     response_text="Infantino: Hi, daddy. S-sorry for disturbing you. But here one asshole found out about status of our private relationship. \n\n Messi: Camera vovo. Camera vovo. Odna bolshaya vovo. kill him. and go hom make mi fut massage."
-    photo_path="infantino_messi.jpg"
+    photo_path="images/infantino_messi.jpg"
     await safe_send_local_photo(
             chat_id=message.chat.id,
             photo_path=photo_path,
@@ -581,7 +581,7 @@ async def infantino_call(message:Message):
 @dp.message(F.text=="JUST LET ME GO I WON'T TELL IT")
 async def infantino_mad(message:Message):
     response_text="And that's your last words? Boring"
-    photo_path="infantino_mad.jpg"
+    photo_path="images/infantino_mad.jpg"
     await safe_send_local_photo(
             chat_id=message.chat.id,
             photo_path=photo_path,
