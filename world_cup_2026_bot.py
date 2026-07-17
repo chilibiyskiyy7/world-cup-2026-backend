@@ -137,6 +137,10 @@ def get_infantino_keyboard_10():
         buttons=[
             [KeyboardButton(text="I knew you are fuckin' humanoid.")]  
             ]
+def get_infantino_keyboard_11():
+        buttons=[
+            [KeyboardButton(text="No bro I got to look")]  
+            ]        
         return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True, one_time_keyboard=True)                                                                                              
 def get_optional_keyboard(menu_type="matches"):
     builder = InlineKeyboardBuilder() 
@@ -577,7 +581,7 @@ async def infantino_call(message:Message):
 
 @dp.message(F.text=="JUST LET ME GO I WON'T TELL IT")
 async def infantino_mad(message:Message):
-    response_text="And that's your last words? Boring"
+    response_text="And that's your last words? Boring \n\n*Infantino shot you*"
     photo_path="images/infantino_mad.jpg"
     await safe_send_local_photo(
             chat_id=message.chat.id,
@@ -586,8 +590,61 @@ async def infantino_mad(message:Message):
             reply_markup=get_main_keyboard()
             )
 
+@dp.message(F.text=="Hmmm. Okayy. Let's change the subject. What the fuck was that ballogan move.")
+async def infantino_ballogan(message:Message):
+    response_text="Honestly, that was not my decision. That was an order."
+    photo_path="images/infantino_order.png"
+    await safe_send_local_photo(
+            chat_id=message.chat.id,
+            photo_path=photo_path,
+            caption=response_text,
+            reply_markup=get_infantino_keyboard_8()
+            )
 
+@dp.message(F.text=="Whose order? Don't it from the man, who even don't know what is red card? Or from the one who stole Madueke's medals? wait a minute, what's on that picture behind you?")
+async def infantino_stress(message:Message):
+    response_text="Oh. Um... I mean.. I mean.. I mean that was absolutely my decision. And I don't understand what are you talking about. And keep out of that picture. And forget about what I was saying. Deal?"
+    photo_path="images/infantino_stress.png"
+    await safe_send_local_photo(
+            chat_id=message.chat.id,
+            photo_path=photo_path,
+            caption=response_text,
+            reply_markup=get_infantino_keyboard_11()
+            )
+    
+    
+@dp.message(F.text=="No bro I got to look")
+async def infantino_tramp(message:Message):
+    response_text="..."
+    photo_path="images/infantino_tramp.png"
+    await safe_send_local_photo(
+            chat_id=message.chat.id,
+            photo_path=photo_path,
+            caption=response_text,
+            reply_markup=get_infantino_keyboard_9()
+            )
+    
+@dp.message(F.text=="Fuck. Man I'd better never seen that shit, it is gross.")
+async def infantino_humanoid(message:Message):
+    response_text="We are dissapointed with your behavior. Now we have to kill you."
+    photo_path="images/infantino_humanoid.png"
+    await safe_send_local_photo(
+            chat_id=message.chat.id,
+            photo_path=photo_path,
+            caption=response_text,
+            reply_markup=get_infantino_keyboard_10()
+            )  
 
+@dp.message(F.text=="I knew you are fuckin' humanoid.")
+async def infantino_humanoid_mad(message:Message):
+    response_text="Of course I am! How then I was on every world cup game? That was my clones. Bye! \n\n*Allien-Infantino shot you."
+    photo_path="images/infantino_humanoid_mad.png"
+    await safe_send_local_photo(
+            chat_id=message.chat.id,
+            photo_path=photo_path,
+            caption=response_text,
+            reply_markup=get_main_keyboard()
+            )      
 
 async def show_groupstage(callback_query: CallbackQuery):
     try:
