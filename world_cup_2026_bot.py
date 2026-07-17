@@ -163,13 +163,13 @@ def get_optional_keyboard(menu_type="matches"):
         builder.adjust(3)
         builder.row(InlineKeyboardButton(text="⬅️ Back to Menu", callback_data="back:standings"))
     elif menu_type == "show_playoffs":
-        stage=[
-            ("Round of 32", "ROUND_OF_32"), 
-            ("Round of 16", "ROUND_OF_16"),
+        stage = [
+            ("Round of 32", "LAST_32"),        
+            ("Round of 16", "LAST_16"),        
             ("Quarter-finals", "QUARTER_FINALS"),
             ("Semi-finals", "SEMI_FINALS"),
             ("Final", "FINAL")
-            ]
+        ]
         for text, code in stage:
             builder.add(InlineKeyboardButton(text=text, callback_data=f"view_playoffs:{code}"))
         builder.adjust(3)    
@@ -439,6 +439,8 @@ async def handle_all_callbacks(callback_query: CallbackQuery):
         await handle_mbappe_yes(callback_query)
     elif data == "mbappe_no":
         await handle_mbappe_no(callback_query)
+    elif data == "infantino_start":  
+        await process_infantino_inline(callback_query)    
     elif data.startswith("show_groupstage"):
         await show_groupstage(callback_query)
     elif data.startswith("view_group:"):
@@ -454,7 +456,6 @@ async def handle_all_callbacks(callback_query: CallbackQuery):
 
 async def handle_mbappe(callback_query: CallbackQuery):
     try:
-        await callback_query.answer()
         response_text="Hi. You might know me. I'n Vini JR, and I'm about to say something.There is a rumors that Kylian Mbappe could be a reason France might not win the World Cup 2026. Someone even call him 'dictator' by joke. People in Real Madrid FC, including me, is frustraited with his behavior. Remember that 'suddenly-went-to-Italy' accident? But I'm not gonna stop with hollow words only. I got the bunch of mediafiles that proofs evilness of this fuckin vicious turtle. Wanna see it?" 
         photo_path="images/vini_crying.jpg"
         await safe_send_local_photo(
@@ -470,7 +471,6 @@ async def handle_mbappe(callback_query: CallbackQuery):
 
 async def handle_mbappe_yes(callback_query: CallbackQuery):
     try:
-        await callback_query.answer()
         user_id = callback_query.from_user.id
         response_text="You're an asshole. Now GET OUT OF MY EYES YOU FUCKIN IDIOT!!!"
         photo_path="images/dictator1.png"
@@ -486,7 +486,6 @@ async def handle_mbappe_yes(callback_query: CallbackQuery):
 
 async def handle_mbappe_no(callback_query: CallbackQuery):
     try:
-        await callback_query.answer()
         response_text="You're a good kid. You were right for not listening to this brasilian drama queen."
         photo_path="images/dictator2_happy.png"
         await safe_send_local_photo(
@@ -500,9 +499,7 @@ async def handle_mbappe_no(callback_query: CallbackQuery):
         await callback_query.message.answer("Sorry, an error occurred. Try again later.")
         
 
-@dp.callback_query(F.data == "infantino_start")
 async def process_infantino_inline(callback: CallbackQuery):
-    await callback.answer()
     response_text="Hi! You're a lucky kid! Today, on 14th of July, you'll have an opportunity to ask me some questions. Go on!"
     photo_path="images/infantino_default.png"
     await safe_send_local_photo(
@@ -660,22 +657,21 @@ async def view_universal_playoffs(callback_query: CallbackQuery):
     try:
         await callback_query.answer()
         stage_code = callback_query.data.split(":")[1]
-        data = await fetch_football_data(endpoint="")
+        
+        # Шаг 1: Запрашиваем "matches", а не пустой эндпоинт!
+        data = await fetch_football_data(endpoint="matches") 
         
         playoff_matches = []
         if data and "matches" in data:
-            # ЦИКЛ №1: ТОЛЬКО собираем матчи нужной стадии, ничего больше!
             for match in data["matches"]:
+                # Шаг 2: Сравниваем стадию с тем, что прислал API
                 if match.get("stage") == stage_code:
                     playoff_matches.append(match)
         
-        # ОТСТУП УМЕНЬШИЛСЯ: Мы вышли из цикла! 
-        # Теперь один раз обрабатываем собранный список:
         if playoff_matches:
             stage_title = stage_code.replace("_", " ").title()
             response_text = f"🏆 *World Cup 2026 — {stage_title}*\n\n"
             
-            # ЦИКЛ №2: Красиво оформляем собранные матчи в текст
             for match in playoff_matches:
                 home_team = match.get("homeTeam", {}).get("name") or "TBD"
                 away_team = match.get("awayTeam", {}).get("name") or "TBD"
@@ -688,14 +684,12 @@ async def view_universal_playoffs(callback_query: CallbackQuery):
                     score_str = "vs"
                 response_text += f"⚽ {home_team} {score_str} {away_team}\n"
             
-            # Один-единственный раз редактируем сообщение
             await callback_query.message.edit_text(
                 text=response_text, 
                 reply_markup=get_optional_keyboard("show_playoffs"), 
                 parse_mode="Markdown"
             )
         else:
-            # Если после окончания цикла список остался пустым
             await callback_query.message.edit_text(
                 text=f"Matches for stage {stage_code} not found or not scheduled yet.",
                 reply_markup=get_optional_keyboard("show_playoffs")
