@@ -92,11 +92,13 @@ async def safe_send_local_album(chat_id, photo_paths, caption="", reply_markup=N
             )
         )
     try:
-        await bot.send_media_group(
-            chat_id=chat_id, 
-            media=media, 
-            reply_markup=reply_markup
-        )
+        await bot.send_media_group(chat_id=chat_id, media=media)
+        if reply_markup:
+            await bot.send_message(
+                chat_id=chat_id, 
+                text="👇 Choose next step:", 
+                reply_markup=reply_markup
+            )
     except Exception as e:
         logging.error(f"Error sending media group: {e}")
         if caption:
@@ -200,6 +202,7 @@ def get_infantino_keyboard_10():
         buttons=[
             [KeyboardButton(text="I knew you are fuckin' humanoid.")]  
             ]
+        return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True, one_time_keyboard=True)
 def get_infantino_keyboard_11():
         buttons=[
             [KeyboardButton(text="No bro I got to look")]  
@@ -209,39 +212,48 @@ def get_infantino_keyboard_11():
 def get_conc_keyboard_0():
         buttons=[
             [KeyboardButton(text="Messi")]  
-            ] 
+            ]
+        return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True, one_time_keyboard=True) 
 def get_conc_keyboard_1():
         buttons=[
             [KeyboardButton(text="Saka")]  
-            ]        
+            ] 
+        return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True, one_time_keyboard=True)       
 def get_conc_keyboard_2():
         buttons=[
             [KeyboardButton(text="Ronaldo")]  
             ]
+        return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True, one_time_keyboard=True)
 def get_conc_keyboard_3():
         buttons=[
             [KeyboardButton(text="Mbappe")]  
             ]
+        return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True, one_time_keyboard=True)
 def get_conc_keyboard_4():
         buttons=[
             [KeyboardButton(text="Olise")]  
             ]
+        return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True, one_time_keyboard=True)
 def get_conc_keyboard_5():
         buttons=[
             [KeyboardButton(text="Heroes")]  
             ]
+        return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True, one_time_keyboard=True)
 def get_conc_keyboard_6():
         buttons=[
             [KeyboardButton(text="Losers")]  
             ]
+        return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True, one_time_keyboard=True)
 def get_conc_keyboard_7():
         buttons=[
             [KeyboardButton(text="Top Scorers")]  
             ]
+        return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True, one_time_keyboard=True)
 def get_conc_keyboard_8():
         buttons=[
             [KeyboardButton(text="Final")]  
-            ]                                        
+            ]   
+        return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True, one_time_keyboard=True)                                     
 def get_optional_keyboard(menu_type="matches"):
     builder = InlineKeyboardBuilder() 
     if menu_type == "random_match":
@@ -524,7 +536,7 @@ async def handle_standings(message:Message):
         await message.answer("Sorry, an error occurred. Try again later.")
 
 @dp.message(F.text=="Conclusions")
-async def handle_conclusions(message:Message):
+async def handle_conclusions_main(message:Message):
     try:
         response_text="Spain - World Cup 2026 Champions! (and Tramp too) \n\nRodri - owner of WC 2026 Ballon D'or! \n\nCubarsi - best young player of WC 2026! \n\nUnai Simon - owner of WC 2026 Golden Glove! \n\n🐐Ferran Torres🐐 - MVP of the final!"
         photos=["images/champions_wc2026.jpg", "images/rodri.jpg", "images/cubarsi.jpg", "images/simon.jpg", "images/ferran.jpg"]
@@ -539,7 +551,7 @@ async def handle_conclusions(message:Message):
         await message.answer("Sorry, an error occurred. Try again later.")
 
 @dp.message(F.text=="Messi")
-async def handle_conclusions(message:Message):
+async def handle_conclusions_messi(message:Message):
     try:
         response_text="Messi did it to the final again! 3rd time. He really did it to the final in 50%% of World Cups he was in. I think we should pay respect to Infantino. \n\nOn this WC, while being an 39 years old, he did one of the greatest individual perfomances. 8+4 in World Cup in that age is incredable."
         photos=["images/messi1.jpg", "images/messi2.jpg", "images/messi3.png", "images/messi4.jpg", "images/messi5.jpg"]
@@ -554,10 +566,10 @@ async def handle_conclusions(message:Message):
         await message.answer("Sorry, an error occurred. Try again later.")
 
 @dp.message(F.text=="Saka")
-async def handle_conclusions(message:Message):
+async def handle_conclusions_saka(message:Message):
     try:
         response_text="Messi's perfomance is nothing compared to this monster perfomance. \n\nDid Messi score hat-trick vs France? \n\nDid Messi score hat-trick in knockouts? \n\nDid ever Messi win EPL? \n\n\n\nBut this monster did."
-        video_path="saka.mp4"
+        video_path="videos/saka.mp4"
         await safe_send_local_video(
             chat_id=message.chat.id,
             video_path=video_path,
@@ -569,7 +581,7 @@ async def handle_conclusions(message:Message):
         await message.answer("Sorry, an error occurred. Try again later.")
 
 @dp.message(F.text=="Ronaldo")
-async def handle_conclusions(message:Message):
+async def handle_conclusions_ronaldo(message:Message):
     try:
         response_text="He's back! Or not? \n\n2 goals against Uzbekistan and 1 penalty vs Croatia while Messi did 8+4. Fate is not on Ronaldo's side again. \n\n\nIt great that at least Messi didn't win, he would go crazy."
         photos=["images/ronaldo1.jpg", "images/ronaldo2.jpg", "images/ronaldo3.jpg", "images/ronaldo4.jpg", "images/ronaldo5.jpg", "images/ronaldo6.jpg", "images/ronaldo7.jpg",]
@@ -594,7 +606,7 @@ async def handle_other(message: Message):
 
 @dp.callback_query()
 async def handle_all_callbacks(callback_query: CallbackQuery):
-    await callback_query.answer()  # Сразу гасим часики на кнопке
+    await callback_query.answer()  
     data = callback_query.data
     
     if data == "mbappe":
@@ -762,7 +774,7 @@ async def infantino_ballogan(message:Message):
             )
 
 @dp.message(F.text=="Whose order? Don't it from the man, who even don't know what is red card? Or from the one who stole Madueke's medals? wait a minute, what's on that picture behind you?")
-async def infantino_stress(message:Message):
+async def infantino_little_scared(message: Message):
     response_text="Oh. Um... I mean.. I mean.. I mean that was absolutely my decision. And I don't understand what are you talking about. And keep out of that picture. And forget about what I was saying. Deal?"
     photo_path="images/infantino_stress.png"
     await safe_send_local_photo(
