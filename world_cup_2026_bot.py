@@ -9,7 +9,7 @@ from datetime import datetime
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.filters import Command
-from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, message, WebAppInfo, MenuButtonWebApp, FSInputFile
+from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, message, WebAppInfo, MenuButtonWebApp, FSInputFile, InputMediaPhoto
 from aiohttp import web
 
 BOT_TOKEN = "8799505831:AAFl8g_PHUuDJEvnD2_Z0M5zMEMxZClRTLM"
@@ -79,14 +79,77 @@ async def safe_send_local_photo(chat_id, photo_path, caption, reply_markup=None,
             parse_mode=parse_mode
         )
 
+async def safe_send_local_album(chat_id, photo_paths, caption="", reply_markup=None):
+    media = []
+    for i, path in enumerate(photo_paths):
+        actual_path = path if os.path.exists(path) else "images/default.jpg"
+        photo_caption = caption if i == 0 else None
+        media.append(
+            InputMediaPhoto(
+                media=FSInputFile(actual_path),
+                caption=photo_caption,
+                parse_mode="HTML"
+            )
+        )
+    try:
+        await bot.send_media_group(
+            chat_id=chat_id, 
+            media=media, 
+            reply_markup=reply_markup
+        )
+    except Exception as e:
+        logging.error(f"Error sending media group: {e}")
+        if caption:
+            await bot.send_message(
+                chat_id=chat_id, 
+                text=caption, 
+                reply_markup=reply_markup
+            )        
+
+async def safe_send_local_video(chat_id, video_path, caption, reply_markup=None, parse_mode="HTML"):
+    if os.path.exists(video_path):
+        video_file = FSInputFile(video_path)
+        try:
+            await bot.send_video(
+                chat_id=chat_id,
+                video=video_file,
+                caption=caption,
+                reply_markup=reply_markup,
+                parse_mode=parse_mode
+            )
+            return
+        except Exception as e:
+            logging.error(f"Critical error sending video {video_path}: {e}")
+    logging.warning(f"Fallback triggered for video: {video_path}")
+    fallback_photo = "images/default.jpg"
+    if os.path.exists(fallback_photo):
+        try:
+            await bot.send_photo(
+                chat_id=chat_id,
+                photo=FSInputFile(fallback_photo),
+                caption=caption,
+                reply_markup=reply_markup,
+                parse_mode=parse_mode
+            )
+            return
+        except Exception as e:
+            logging.error(f"Failed to send fallback photo: {e}")
+    await bot.send_message(
+        chat_id=chat_id,
+        text=caption,
+        reply_markup=reply_markup,
+        parse_mode=parse_mode
+    )
 
 def get_main_keyboard():
     buttons=[
         [KeyboardButton(text="Latest Matches"), KeyboardButton(text="Today's Matches"), KeyboardButton(text="Random Match")],
         [KeyboardButton(text="Standings"), KeyboardButton(text="Top Scorers")],
-        [KeyboardButton(text="Other...")]
+        [KeyboardButton(text="Conclusions"), KeyboardButton(text="Other...")]
     ]     
     return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True)
+
+
 def get_infantino_keyboard_1():
         buttons=[
             [KeyboardButton(text="Let's talk about Argentina. There's so much hustle about things that are going with Messi")]
@@ -141,7 +204,44 @@ def get_infantino_keyboard_11():
         buttons=[
             [KeyboardButton(text="No bro I got to look")]  
             ]        
-        return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True, one_time_keyboard=True)                                                                                              
+        return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True, one_time_keyboard=True)
+
+def get_conc_keyboard_0():
+        buttons=[
+            [KeyboardButton(text="Messi")]  
+            ] 
+def get_conc_keyboard_1():
+        buttons=[
+            [KeyboardButton(text="Saka")]  
+            ]        
+def get_conc_keyboard_2():
+        buttons=[
+            [KeyboardButton(text="Ronaldo")]  
+            ]
+def get_conc_keyboard_3():
+        buttons=[
+            [KeyboardButton(text="Mbappe")]  
+            ]
+def get_conc_keyboard_4():
+        buttons=[
+            [KeyboardButton(text="Olise")]  
+            ]
+def get_conc_keyboard_5():
+        buttons=[
+            [KeyboardButton(text="Heroes")]  
+            ]
+def get_conc_keyboard_6():
+        buttons=[
+            [KeyboardButton(text="Losers")]  
+            ]
+def get_conc_keyboard_7():
+        buttons=[
+            [KeyboardButton(text="Top Scorers")]  
+            ]
+def get_conc_keyboard_8():
+        buttons=[
+            [KeyboardButton(text="Final")]  
+            ]                                        
 def get_optional_keyboard(menu_type="matches"):
     builder = InlineKeyboardBuilder() 
     if menu_type == "random_match":
@@ -423,6 +523,66 @@ async def handle_standings(message:Message):
         logging.error(f"Error in 'Standings': {e}", exc_info=True)
         await message.answer("Sorry, an error occurred. Try again later.")
 
+@dp.message(F.text=="Conclusions")
+async def handle_conclusions(message:Message):
+    try:
+        response_text="Spain - World Cup 2026 Champions! (and Tramp too) \n\nRodri - owner of WC 2026 Ballon D'or! \n\nCubarsi - best young player of WC 2026! \n\nUnai Simon - owner of WC 2026 Golden Glove! \n\n🐐Ferran Torres🐐 - MVP of the final!"
+        photos=["images/champions_wc2026.jpg", "images/rodri.jpg", "images/cubarsi.jpg", "images/simon.jpg", "images/ferran.jpg"]
+        await safe_send_local_album(
+            chat_id=message.chat.id,
+            photo_paths=photos,
+            caption=response_text,
+            reply_markup=get_conc_keyboard_0() 
+        )
+    except Exception as e:
+        logging.error(f"Error in 'Conclusions': {e}", exc_info=True)
+        await message.answer("Sorry, an error occurred. Try again later.")
+
+@dp.message(F.text=="Messi")
+async def handle_conclusions(message:Message):
+    try:
+        response_text="Messi did it to the final again! 3rd time. He really did it to the final in 50%% of World Cups he was in. I think we should pay respect to Infantino. \n\nOn this WC, while being an 39 years old, he did one of the greatest individual perfomances. 8+4 in World Cup in that age is incredable."
+        photos=["images/messi1.jpg", "images/messi2.jpg", "images/messi3.png", "images/messi4.jpg", "images/messi5.jpg"]
+        await safe_send_local_album(
+            chat_id=message.chat.id,
+            photo_paths=photos,
+            caption=response_text,
+            reply_markup=get_conc_keyboard_1() 
+        )
+    except Exception as e:
+        logging.error(f"Error in 'Conclusions': {e}", exc_info=True)
+        await message.answer("Sorry, an error occurred. Try again later.")
+
+@dp.message(F.text=="Saka")
+async def handle_conclusions(message:Message):
+    try:
+        response_text="Messi's perfomance is nothing compared to this monster perfomance. \n\nDid Messi score hat-trick vs France? \n\nDid Messi score hat-trick in knockouts? \n\nDid ever Messi win EPL? \n\n\n\nBut this monster did."
+        video_path="saka.mp4"
+        await safe_send_local_video(
+            chat_id=message.chat.id,
+            video_path=video_path,
+            caption=response_text,
+            reply_markup=get_conc_keyboard_2() 
+        )
+    except Exception as e:
+        logging.error(f"Error in 'Conclusions': {e}", exc_info=True)
+        await message.answer("Sorry, an error occurred. Try again later.")
+
+@dp.message(F.text=="Ronaldo")
+async def handle_conclusions(message:Message):
+    try:
+        response_text="He's back! Or not? \n\n2 goals against Uzbekistan and 1 penalty vs Croatia while Messi did 8+4. Fate is not on Ronaldo's side again. \n\n\nIt great that at least Messi didn't win, he would go crazy."
+        photos=["images/ronaldo1.jpg", "images/ronaldo2.jpg", "images/ronaldo3.jpg", "images/ronaldo4.jpg", "images/ronaldo5.jpg", "images/ronaldo6.jpg", "images/ronaldo7.jpg",]
+        await safe_send_local_album(
+            chat_id=message.chat.id,
+            photo_paths=photos,
+            caption=response_text,
+            reply_markup=get_conc_keyboard_3() 
+        )
+    except Exception as e:
+        logging.error(f"Error in 'Conclusions': {e}", exc_info=True)
+        await message.answer("Sorry, an error occurred. Try again later.")
+
 @dp.message(F.text=="Other...")
 async def handle_other(message: Message):
     try:
@@ -593,7 +753,7 @@ async def infantino_mad(message:Message):
 @dp.message(F.text=="Hmmm. Okayy. Let's change the subject. What the fuck was that ballogan move.")
 async def infantino_ballogan(message:Message):
     response_text="Honestly, that was not my decision. That was an order."
-    photo_path="images/infantino_order.png"
+    photo_path="images/infantino_order.jpg"
     await safe_send_local_photo(
             chat_id=message.chat.id,
             photo_path=photo_path,
@@ -616,7 +776,7 @@ async def infantino_stress(message:Message):
 @dp.message(F.text=="No bro I got to look")
 async def infantino_tramp(message:Message):
     response_text="..."
-    photo_path="images/infantino_tramp.png"
+    photo_path="images/infantino_tramp.jpg"
     await safe_send_local_photo(
             chat_id=message.chat.id,
             photo_path=photo_path,
@@ -627,7 +787,7 @@ async def infantino_tramp(message:Message):
 @dp.message(F.text=="Fuck. Man I'd better never seen that shit, it is gross.")
 async def infantino_humanoid(message:Message):
     response_text="We are dissapointed with your behavior. Now we have to kill you."
-    photo_path="images/infantino_humanoid.png"
+    photo_path="images/infantino_humanoid.jpg"
     await safe_send_local_photo(
             chat_id=message.chat.id,
             photo_path=photo_path,
@@ -638,7 +798,7 @@ async def infantino_humanoid(message:Message):
 @dp.message(F.text=="I knew you are fuckin' humanoid.")
 async def infantino_humanoid_mad(message:Message):
     response_text="Of course I am! How then I was on every world cup game? That was my clones. Bye! \n\n*Allien-Infantino shot you."
-    photo_path="images/infantino_humanoid_mad.png"
+    photo_path="images/infantino_humanoid_mad.jpg"
     await safe_send_local_photo(
             chat_id=message.chat.id,
             photo_path=photo_path,
