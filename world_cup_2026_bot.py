@@ -95,8 +95,7 @@ async def safe_send_local_album(chat_id, photo_paths, caption="", reply_markup=N
         await bot.send_media_group(chat_id=chat_id, media=media)
         if reply_markup:
             await bot.send_message(
-                chat_id=chat_id, 
-                text="👇 Choose next step:", 
+                chat_id=chat_id,  
                 reply_markup=reply_markup
             )
     except Exception as e:
@@ -146,7 +145,7 @@ async def safe_send_local_video(chat_id, video_path, caption, reply_markup=None,
 def get_main_keyboard():
     buttons=[
         [KeyboardButton(text="Latest Matches"), KeyboardButton(text="Today's Matches"), KeyboardButton(text="Random Match")],
-        [KeyboardButton(text="Standings"), KeyboardButton(text="Top Scorers")],
+        [KeyboardButton(text="Standings"), KeyboardButton(text="Top Scorers"), KeyboardButton(text="Top Assisters")],
         [KeyboardButton(text="Conclusions"), KeyboardButton(text="Other...")]
     ]     
     return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True)
@@ -525,6 +524,55 @@ async def top_scorers_handler(request):
         return web.json_response({"scorers":result}, headers=headers)
     return web.json_response({"scorers": []}, headers=headers)
 
+@dp.message(F.text == "Top Assisters")
+async def handle_top_assisters(message: Message):
+    try:
+        data = await fetch_football_data(endpoint="scorers")
+        if data and "scorers" in data:
+            raw_scorers = data["scorers"]
+            sorted_assisters = sorted(
+                raw_scorers, 
+                key=lambda x: x.get("assists") or 0, 
+                reverse=True
+            )[:10]
+            if sorted_assisters:
+                response_text = "<b>Top Assisters World Cup 2026:</b>\n\n"
+                for i, scorer in enumerate(sorted_assisters, 1):
+                    player_name = scorer.get("player", {}).get("name") or "Unknown Player"
+                    team_name = scorer.get("team", {}).get("name") or "Unknown Team"
+                    assists = scorer.get("assists") or 0
+                    response_text += f"{i}. <b>{player_name}</b> ({team_name}) - {assists} assists!\n"
+                await message.answer(response_text, parse_mode="HTML")
+            else:
+                await message.answer("No top assisters' data yet.")
+        else:
+            await message.answer("Sorry, couldn't fetch data at the moment.")
+    except Exception as e:
+        logging.error(f"Error in 'Top Assisters': {e}", exc_info=True)
+        await message.answer("Sorry, an error occurred. Try again later.")
+
+async def top_assisters_handler(request):
+    data = await fetch_football_data(endpoint="scorers")
+    headers = {"Access-Control-Allow-Origin": "*"}
+    if data and "scorers" in data:
+        sorted_assisters = sorted(
+            data["scorers"], 
+            key=lambda x: x.get("assists") or 0, 
+            reverse=True
+        )[:10]
+        result = []
+        for scorer in sorted_assisters:
+            player = scorer.get("player", {})
+            team = scorer.get("team", {})
+            result.append({
+                "player_id": player.get("id"),
+                "player_name": player.get("name") or "Unknown Player",
+                "team_name": team.get("name") or "Unknown Team",
+                "goals": scorer.get("goals", 0),
+                "assists": scorer.get("assists", 0)
+            })    
+        return web.json_response({"assisters": result}, headers=headers)
+    return web.json_response({"assisters": []}, headers=headers)        
 
 @dp.message(F.text=="Standings")
 async def handle_standings(message:Message):
@@ -594,6 +642,36 @@ async def handle_conclusions_ronaldo(message:Message):
     except Exception as e:
         logging.error(f"Error in 'Conclusions': {e}", exc_info=True)
         await message.answer("Sorry, an error occurred. Try again later.")
+
+@dp.message(F.text=="Mbappe")
+async def handle_conclusions_mbappe(message:Message):
+    try:
+        response_text="Owner of Golden Boot of FIFA World Cup 2026, owner of Golden Boot of Uefa Champions League 25/26 season, owner of Pichichi Trophy of 25/26 season, top-1 scorer in World Cup History. \n\nFrance's Captain - Dictator Kylian Mbappe. \n\n\n\n10+4, but unfortunately not even bronze medal's owmer. He will be back stronger. To win Treble with Real Madrid and Ballon D'or."
+        photos=["images/mbappe1.jpg", "images/mbappe2.jpg", "images/mbappe3.jpg", "images/mbappe4.jpg", "images/mbappe5.jpg"]
+        await safe_send_local_video(
+            chat_id=message.chat.id,
+            photo_paths=photos,
+            caption=response_text,
+            reply_markup=get_conc_keyboard_4() 
+        )
+    except Exception as e:
+        logging.error(f"Error in 'Conclusions': {e}", exc_info=True)
+        await message.answer("Sorry, an error occurred. Try again later.") 
+
+@dp.message(F.text=="Olise")
+async def handle_conclusions_olise(message:Message):
+    try:
+        response_text="Olise had settle Pele's and world's record by assists on one tournament, but when it goes to scoring goals... \n\n0+7!\nNice connection with dictator. \n\nHere we go to Real Madrid???"
+        photos=["images/olise1.jpg", "images/olise2.jpg", "images/olise3.jpg", "images/olise4.jpg", "images/olise5.jpg"]
+        await safe_send_local_video(
+            chat_id=message.chat.id,
+            photo_paths=photos,
+            caption=response_text,
+            reply_markup=get_conc_keyboard_5() 
+        )
+    except Exception as e:
+        logging.error(f"Error in 'Conclusions': {e}", exc_info=True)
+        await message.answer("Sorry, an error occurred. Try again later.")               
 
 @dp.message(F.text=="Other...")
 async def handle_other(message: Message):
@@ -999,6 +1077,7 @@ async def main():
     app.router.add_get("/api/latest/matches", latest_matches_handler)
     app.router.add_get("/api/top/scorers", top_scorers_handler)
     app.router.add_get("/api/random/match", random_match_handler)
+    app.router.add_get("/api/top/assisters", top_assisters_handler)
     runner=web.AppRunner(app)
     await runner.setup()
     port = int(os.environ.get("PORT", 8085))  
