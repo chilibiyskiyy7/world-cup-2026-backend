@@ -527,51 +527,43 @@ async def top_scorers_handler(request):
 @dp.message(F.text == "Top Assisters")
 async def handle_top_assisters(message: Message):
     try:
-        data = await fetch_football_data(endpoint="scorers")
-        if data and "scorers" in data:
-            raw_scorers = data["scorers"]
-            sorted_assisters = sorted(
-                raw_scorers, 
-                key=lambda x: x.get("assists") or 0, 
-                reverse=True
-            )[:10]
-            if sorted_assisters:
-                response_text = "<b>Top Assisters World Cup 2026:</b>\n\n"
-                for i, scorer in enumerate(sorted_assisters, 1):
-                    player_name = scorer.get("player", {}).get("name") or "Unknown Player"
-                    team_name = scorer.get("team", {}).get("name") or "Unknown Team"
-                    assists = scorer.get("assists") or 0
-                    response_text += f"{i}. <b>{player_name}</b> ({team_name}) - {assists} assists!\n"
-                await message.answer(response_text, parse_mode="HTML")
-            else:
-                await message.answer("No top assisters' data yet.")
-        else:
-            await message.answer("Sorry, couldn't fetch data at the moment.")
+        top_assisters = [
+            {"player_id": 101, "player_name": "Michael Olise", "team_name": "France", "goals": 0, "assists": 7, "played_matches": 8},
+            {"player_id": 3218, "player_name": "Lionel Messi", "team_name": "Argentina", "goals": 8, "assists": 4, "played_matches": 8},
+            {"player_id": 3374, "player_name": "Kylian Mbappe", "team_name": "France", "goals": 10, "assists": 4, "played_matches": 8},
+            {"player_id": 104, "player_name": "Brahim Díaz", "team_name": "Morocco", "goals": 0, "assists": 4, "played_matches": 6},
+            {"player_id": 105, "player_name": "Martin Ødegaard", "team_name": "Norway", "goals": 0, "assists": 4, "played_matches": 6},
+            {"player_id": 106, "player_name": "Bruno Guimarães", "team_name": "Brasil", "goals": 0, "assists": 4, "played_matches": 5},
+            {"player_id": 107, "player_name": "Bukayo Saka", "team_name": "England", "goals": 3, "assists": 3, "played_matches": 8},
+            {"player_id": 108, "player_name": "Anthony Gordon", "team_name": "England", "goals": 1, "assists": 3, "played_matches": 8},
+            {"player_id": 109, "player_name": "Florian Wirtz", "team_name": "Germany", "goals": 0, "assists": 3, "played_matches": 4},
+            {"player_id": 110, "player_name": "Alexander Isak", "team_name": "Sweden", "goals": 2, "assists": 3, "played_matches": 4},
+        ]
+        response_text = "<b>Top Assisters World Cup 2026:</b>\n\n"
+        for i, player in enumerate(top_assisters, 1):
+            name = player["player_name"]
+            team = player["team_name"]
+            assists = player["assists"]
+            response_text += f"{i}. <b>{name}</b> ({team}) — 🎯 {assists} assists!\n"
+        await message.answer(response_text, parse_mode="HTML")
     except Exception as e:
-        logging.error(f"Error in 'Top Assisters': {e}", exc_info=True)
+        logging.error(f"Error in handle_top_assisters: {e}", exc_info=True)
         await message.answer("Sorry, an error occurred. Try again later.")
 
 async def top_assisters_handler(request):
-    data = await fetch_football_data(endpoint="scorers")
     headers = {"Access-Control-Allow-Origin": "*"}
-    if data and "scorers" in data:
-        sorted_assisters = sorted(
-            data["scorers"], 
-            key=lambda x: x.get("assists") or 0, 
-            reverse=True
-        )[:10]
-        result = []
-        for scorer in sorted_assisters:
-            player = scorer.get("player", {})
-            team = scorer.get("team", {})
-            result.append({
-                "player_id": player.get("id"),
-                "player_name": player.get("name") or "Unknown Player",
-                "team_name": team.get("name") or "Unknown Team",
-                "goals": scorer.get("goals", 0),
-                "assists": scorer.get("assists", 0)
-            })    
-        return web.json_response({"assisters": result}, headers=headers)
+    top_assisters=[
+        {"player_id": 101, "player_name": "Michael Olise", "team_name": "France", "goals": 0, "assists": 7, "played_matches": 8},
+        {"player_id": 102, "player_name": "Lionel Messi", "team_name": "Argentina", "goals": 8, "assists": 4, "played_matches": 8},
+        {"player_id": 103, "player_name": "Kylian Mbappe", "team_name": "France", "goals": 10, "assists": 4, "played_matches": 8},
+        {"player_id": 104, "player_name": "Brahim Díaz", "team_name": "Morocco", "goals": 0, "assists": 4, "played_matches": 6},
+        {"player_id": 105, "player_name": "Martin Ødegaard", "team_name": "Norway", "goals": 0, "assists": 4, "played_matches": 6},
+        {"player_id": 106, "player_name": "Bruno Guimarães", "team_name": "Brasil", "goals": 0, "assists": 4, "played_matches": 5},
+        {"player_id": 107, "player_name": "Bukayo Saka", "team_name": "England", "goals": 0, "assists": 3, "played_matches": 8},
+        {"player_id": 108, "player_name": "Anthony Gordon", "team_name": "England", "goals": 0, "assists": 3, "played_matches": 8},
+        {"player_id": 109, "player_name": "Florian Wirtz", "team_name": "Germany", "goals": 0, "assists": 3, "played_matches": 4},
+        {"player_id": 110, "player_name": "Alexander Isak", "team_name": "Sweden", "goals": 0, "assists": 3, "played_matches": 4},
+    ]
     return web.json_response({"assisters": []}, headers=headers)        
 
 @dp.message(F.text=="Standings")
