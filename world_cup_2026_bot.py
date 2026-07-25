@@ -564,7 +564,7 @@ async def top_assisters_handler(request):
         {"player_id": 109, "player_name": "Florian Wirtz", "team_name": "Germany", "goals": 0, "assists": 3, "played_matches": 4},
         {"player_id": 110, "player_name": "Alexander Isak", "team_name": "Sweden", "goals": 0, "assists": 3, "played_matches": 4},
     ]
-    return web.json_response({"assisters": []}, headers=headers)        
+    return web.json_response({"assisters": top_assisters}, headers=headers)        
 
 @dp.message(F.text=="Standings")
 async def handle_standings(message:Message):
