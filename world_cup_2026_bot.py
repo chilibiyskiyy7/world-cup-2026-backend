@@ -554,8 +554,8 @@ async def top_assisters_handler(request):
     headers = {"Access-Control-Allow-Origin": "*"}
     top_assisters=[
         {"player_id": 101, "player_name": "Michael Olise", "team_name": "France", "goals": 0, "assists": 7, "played_matches": 8},
-        {"player_id": 102, "player_name": "Lionel Messi", "team_name": "Argentina", "goals": 8, "assists": 4, "played_matches": 8},
-        {"player_id": 103, "player_name": "Kylian Mbappe", "team_name": "France", "goals": 10, "assists": 4, "played_matches": 8},
+        {"player_id": 3218, "player_name": "Lionel Messi", "team_name": "Argentina", "goals": 8, "assists": 4, "played_matches": 8},
+        {"player_id": 3374, "player_name": "Kylian Mbappe", "team_name": "France", "goals": 10, "assists": 4, "played_matches": 8},
         {"player_id": 104, "player_name": "Brahim Díaz", "team_name": "Morocco", "goals": 0, "assists": 4, "played_matches": 6},
         {"player_id": 105, "player_name": "Martin Ødegaard", "team_name": "Norway", "goals": 0, "assists": 4, "played_matches": 6},
         {"player_id": 106, "player_name": "Bruno Guimarães", "team_name": "Brasil", "goals": 0, "assists": 4, "played_matches": 5},
