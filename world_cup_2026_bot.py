@@ -245,14 +245,9 @@ def get_conc_keyboard_6():
         return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True, one_time_keyboard=True)
 def get_conc_keyboard_7():
         buttons=[
-            [KeyboardButton(text="Top Scorers")]  
-            ]
-        return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True, one_time_keyboard=True)
-def get_conc_keyboard_8():
-        buttons=[
             [KeyboardButton(text="Final")]  
-            ]   
-        return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True, one_time_keyboard=True)                                     
+            ]
+        return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True, one_time_keyboard=True)                                        
 def get_optional_keyboard(menu_type="matches"):
     builder = InlineKeyboardBuilder() 
     if menu_type == "random_match":
@@ -260,10 +255,6 @@ def get_optional_keyboard(menu_type="matches"):
             InlineKeyboardButton(text="Refresh", callback_data="refresh:random"), 
             InlineKeyboardButton(text="Back", callback_data="back:random")
         ) 
-        builder.row(
-            InlineKeyboardButton(text="Bot's Prediction", callback_data="bot_prediction"), 
-            InlineKeyboardButton(text="Make prediction", callback_data="make_prediction")
-        )
         
     elif menu_type == "standings":    
         builder.row(
@@ -559,10 +550,10 @@ async def top_assisters_handler(request):
         {"player_id": 104, "player_name": "Brahim Díaz", "team_name": "Morocco", "goals": 0, "assists": 4, "played_matches": 6},
         {"player_id": 105, "player_name": "Martin Ødegaard", "team_name": "Norway", "goals": 0, "assists": 4, "played_matches": 6},
         {"player_id": 106, "player_name": "Bruno Guimarães", "team_name": "Brasil", "goals": 0, "assists": 4, "played_matches": 5},
-        {"player_id": 107, "player_name": "Bukayo Saka", "team_name": "England", "goals": 0, "assists": 3, "played_matches": 8},
-        {"player_id": 108, "player_name": "Anthony Gordon", "team_name": "England", "goals": 0, "assists": 3, "played_matches": 8},
+        {"player_id": 107, "player_name": "Bukayo Saka", "team_name": "England", "goals": 3, "assists": 3, "played_matches": 8},
+        {"player_id": 108, "player_name": "Anthony Gordon", "team_name": "England", "goals": 1, "assists": 3, "played_matches": 8},
         {"player_id": 109, "player_name": "Florian Wirtz", "team_name": "Germany", "goals": 0, "assists": 3, "played_matches": 4},
-        {"player_id": 110, "player_name": "Alexander Isak", "team_name": "Sweden", "goals": 0, "assists": 3, "played_matches": 4},
+        {"player_id": 110, "player_name": "Alexander Isak", "team_name": "Sweden", "goals": 2, "assists": 3, "played_matches": 4},
     ]
     return web.json_response({"assisters": top_assisters}, headers=headers)        
 
@@ -640,7 +631,7 @@ async def handle_conclusions_mbappe(message:Message):
     try:
         response_text="Owner of Golden Boot of FIFA World Cup 2026, owner of Golden Boot of Uefa Champions League 25/26 season, owner of Pichichi Trophy of 25/26 season, top-1 scorer in World Cup History. \n\nFrance's Captain - Dictator Kylian Mbappe. \n\n\n\n10+4, but unfortunately not even bronze medal's owmer. He will be back stronger. To win Treble with Real Madrid and Ballon D'or."
         photos=["images/mbappe1.jpg", "images/mbappe2.jpg", "images/mbappe3.jpg", "images/mbappe4.jpg", "images/mbappe5.jpg"]
-        await safe_send_local_video(
+        await safe_send_local_album(
             chat_id=message.chat.id,
             photo_paths=photos,
             caption=response_text,
@@ -655,7 +646,7 @@ async def handle_conclusions_olise(message:Message):
     try:
         response_text="Olise had settle Pele's and world's record by assists on one tournament, but when it goes to scoring goals... \n\n0+7!\nNice connection with dictator. \n\nHere we go to Real Madrid???"
         photos=["images/olise1.jpg", "images/olise2.jpg", "images/olise3.jpg", "images/olise4.jpg", "images/olise5.jpg"]
-        await safe_send_local_video(
+        await safe_send_local_album(
             chat_id=message.chat.id,
             photo_paths=photos,
             caption=response_text,
@@ -665,6 +656,52 @@ async def handle_conclusions_olise(message:Message):
         logging.error(f"Error in 'Conclusions': {e}", exc_info=True)
         await message.answer("Sorry, an error occurred. Try again later.")               
 
+@dp.message(F.text=="Heroes")
+async def handle_conclusions_heroes(message:Message):
+    try:
+        response_text="Now Norway and Morocco may be considering as pre-top teams! \nHaaland media boost is crazy as scoring 7 goals in debut WC, Nusa did it well, Ødegaard's one of the best assisters, Sørloth as winger's not that good but anyway. \n\nMorocco won Netherlands, Brahim and Thiaw were good, Bounou was one of the best keepers on that WC. \n\nAnd what did Cabo-Verde is a pure fantasy! Even champions didn't beat them."
+        photos=["images/norway1.jpg", "images/norway2.jpg", "images/norway3.jpg", "images/morocco1.jpg", "images/morocco2.jpg", "images/morocco3.jpg", "images/cabo1.jpg", "images/cabo2.jpg", "images/cabo3.jpg"]
+        await safe_send_local_album(
+            chat_id=message.chat.id,
+            photo_paths=photos,
+            caption=response_text,
+            reply_markup=get_conc_keyboard_6() 
+        )
+    except Exception as e:
+        logging.error(f"Error in 'Conclusions': {e}", exc_info=True)
+        await message.answer("Sorry, an error occurred. Try again later.")
+
+@dp.message(F.text=="Losers")
+async def handle_conclusions_losers(message:Message):
+    try:
+        response_text="Uruguay lost its place in 1/16 to Cabo-Verde, Germany have lost to Paraguay, and Netherlands were done in 1/16 stage. \n\nPortugal showed boring football, and Brasil lost to Norway despite all the hopes."
+        photos=["images/uruguay.jpg", "images/germany.jpg", "images/netherlands.jpg", "images/portugal.jpg", "images/brasil.jpg"]
+        await safe_send_local_album(
+            chat_id=message.chat.id,
+            photo_paths=photos,
+            caption=response_text,
+            reply_markup=get_conc_keyboard_7() 
+        )
+    except Exception as e:
+        logging.error(f"Error in 'Conclusions': {e}", exc_info=True)
+        await message.answer("Sorry, an error occurred. Try again later.")
+
+@dp.message(F.text=="Final")
+async def handle_conclusions_final(message:Message):
+    try:
+        response_text="In the final Spain destroyed Argentina. Messi had a bad match, he for the first time on this WC finished match without at least one goal or assist, so by this he lets Mbappe became top-1 scorer in history of World Cups. Argentina had 0 shots in target. Maybe Enzo ruined it, and Emi would do everything on penaltys? I guess we'll never know. Yamal won Euro and World Cup by 19. And he's probably going to get Ballon D'or. Ferran Torres despite to all the hate scored the only goal on that final. This goal made Spain World Champions for the second time. \n\nIn half-time Madonna, Shakira, Burna Boy, BTS and Justin Bieber were perfoming.  \n\nThe day before final France and England played probably the greatest match for third place in history. Score 4:6 is insane. \n\nI guess that's all"
+        photos=["images/final1.png", "images/final2.png", "images/final3.png", "images/final4.png", "images/final5.png"]
+        await safe_send_local_album(
+            chat_id=message.chat.id,
+            photo_paths=photos,
+            caption=response_text,
+            reply_markup=get_main_keyboard() 
+        )
+    except Exception as e:
+        logging.error(f"Error in 'Conclusions': {e}", exc_info=True)
+        await message.answer("Sorry, an error occurred. Try again later.")
+
+                        
 @dp.message(F.text=="Other...")
 async def handle_other(message: Message):
     try:
@@ -956,14 +993,11 @@ async def view_universal_playoffs(callback_query: CallbackQuery):
     try:
         await callback_query.answer()
         stage_code = callback_query.data.split(":")[1]
-        
-        # Шаг 1: Запрашиваем "matches", а не пустой эндпоинт!
         data = await fetch_football_data(endpoint="matches") 
         
         playoff_matches = []
         if data and "matches" in data:
             for match in data["matches"]:
-                # Шаг 2: Сравниваем стадию с тем, что прислал API
                 if match.get("stage") == stage_code:
                     playoff_matches.append(match)
         
